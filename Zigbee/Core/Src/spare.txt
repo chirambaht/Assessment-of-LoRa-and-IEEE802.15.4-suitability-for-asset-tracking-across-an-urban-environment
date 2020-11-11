@@ -1,0 +1,219 @@
+int write_short(SPI_HandleTypeDef spi, uint8_t addr, uint8_t data){
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0); //Toggle chip select
+
+		volatile uint8_t address = addr << 1;
+		address = address & 0x7E;
+		address = address | 0x01;
+		HAL_SPI_Transmit(&spi, &address, sizeof(address), 100);
+		HAL_SPI_Transmit(&spi, &data, sizeof(data), 100);
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
+	return HAL_OK;
+}
+
+int write_long(SPI_HandleTypeDef spi, uint16_t addr, uint8_t data){
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0); //Toggle chip select
+
+		volatile uint8_t address_high = addr >> 3;
+		volatile uint8_t address_low = addr << 5;
+		address_high = address_high | 0x80;
+		address_low = address_low | 0x10;
+		HAL_SPI_Transmit(&spi, &address_high, sizeof(address_high), 100);
+		HAL_SPI_Transmit(&spi, &address_low, sizeof(address_low), 100);
+		HAL_SPI_Receive(&spi, &data, sizeof(data), 100);
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
+	return HAL_OK;
+}
+
+uint8_t read_short(SPI_HandleTypeDef spi, uint8_t addr){
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0); //Toggle chip select
+
+		volatile uint8_t address = addr << 1;
+		uint8_t buff = 0;
+		address = address & 0x7E;
+		HAL_SPI_Transmit(&spi, &address, sizeof(address), 100);
+		HAL_SPI_Receive(&spi, &buff, sizeof(buff), 100);
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
+	return buff;
+}
+
+uint8_t read_long(SPI_HandleTypeDef spi, uint16_t addr){
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0); //Toggle chip select
+
+		uint8_t buff = 0;
+		volatile uint8_t address_high = addr >> 3;
+		volatile uint8_t address_low = addr << 5;
+		address_high = address_high | 0x80;
+		HAL_SPI_Transmit(&spi, &address_high, sizeof(address_high), 100);
+		HAL_SPI_Transmit(&spi, &address_low, sizeof(address_low), 100);
+		HAL_SPI_Receive(&spi, &buff, sizeof(buff), 100);
+
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
+	return buff;
+}
+
+int init_zigbee(){
+	write_short(hspi1, MRF_SOFTRST, 0x07); 			// Soft reset
+	write_short(hspi1, MRF_PACON2, 0x98);			// FIFOEN = 1. TXONTS = 0x6
+	write_short(hspi1, MRF_TXSTBL, 0x95);			// RSTBL = 0x9
+	write_long(hspi1, MRF_RFCON0, 0x03);			// RFOPT = 0x3
+	write_long(hspi1, MRF_RFCON1, 0x01);			// VCOOPT = 0x02
+	write_long(hspi1, MRF_RFCON2, 0x80);			// PLLEN = 1
+	write_long(hspi1, MRF_RFCON6, 0x90);			// TXFIL = 1, 20MRECVR = 1
+	write_long(hspi1, MRF_RFCON7, 0x80);			// SLPCLKSEL = 0x2
+	write_long(hspi1, MRF_RFCON8, 0x10);			// RFVCO = 1
+	write_long(hspi1, MRF_SLPCON1, 0x21);			// !CLKOUTEN = 1, SLPCLKDIV = 0x01
+
+	// Beacons: Set to non beacon mode
+	write_short(hspi1, MRF_RXMCR, 0x04);			// Set PAN coordinator
+	write_short(hspi1, MRF_TXMCR, 0x1C);			// Set to unslotted CSMA mode
+	write_short(hspi1, MRF_ORDER, 0xFF);			// Set to not transmit beacons
+
+//	write_short(hspi1, MRF_RXMCR, 0x00);			// Set PAN device
+//	write_short(hspi1, MRF_TXMCR, 0x1C);			// Set to unslotted CSMA mode
+	// ---
+
+	write_short(hspi1, MRF_BBREG2, 0x80);			// Set to CCA Mode 1
+	write_short(hspi1, MRF_CCAEDTH, 0x60);			// Set to -69dBm
+	write_short(hspi1, MRF_BBREG6, 0x40);			// Calculate RSSI for each packet
+
+	// Interrupts: Set them all on
+	write_long(hspi1, MRF_SLPCON0, 0x02);			// Set interrupts to rising edge
+	write_short(hspi1, MRF_INTCON, 0x00);			// Turn on all interrupts
+	// ---
+
+	// Channel Selection: Set to channel 19 2.445 GHz
+	write_long(hspi1, MRF_RFCON0, 0x83); 			// Set to channel 19
+	// ---
+
+	// Transmission Power: Set to max- 0dBm
+	write_long(hspi1, MRF_RFCON3, 0x00);			// Set transmission power to 0dBm
+	// ---
+
+	write_short(hspi1, MRF_RFCTL, 0x04);			// Reset the RF State Machine
+	HAL_Delay(1);
+	write_short(hspi1, MRF_RFCTL, 0x00);			// Return state machine to normal operation
+	HAL_Delay(1);
+
+	HAL_UART_Transmit(&huart1, 0xFF , sizeof(0xFF), 100);
+	return HAL_OK;
+}
+
+packet receive_zigbee(){
+  if (read_short(hspi1, MRF_INTSTAT) == 0x08){
+    // stop inturrupts
+    write_short(hspi1, MRF_BBREG1, 0x04);   // Disable packet receiving
+    uint8_t frame_length = read_long(hspi1, 0x300);
+    packet in;
+    for (size_t i = 0; i < frame_length; i++){
+      in.data[i] = read_long(hspi1, 0x301 + 0);
+    }
+    in.RSSI = read_long(hspi1, 0x301 + frame_length + 1);
+    in.LQI = read_long(hspi1, 0x301 + frame_length);
+    in.FCS = read_long(hspi1, 0x301 + frame_length + 1);
+    write_short(hspi1, MRF_BBREG1, 0x00);   // Enable packet receiving
+    // enable inturrupts
+
+    return in;
+  }
+}
+
+void set_promiscuous(uint8_t val){
+  if (val){
+    write_short(hspi1, MRF_RXMCR, 0x01);
+  }
+  else{
+    write_short(hspi1, MRF_RXMCR, 0x00);
+  }
+}
+
+
+void set_ignorebytes(uint8_t count) {
+    ignore_bytes = count;
+}
+
+void address16_write(uint16_t address16) {
+    write_short(hspi1,MRF_SADRH, address16 >> 8);
+    write_short(hspi1,MRF_SADRL, address16 & 0xff);
+}
+
+uint16_t address16_read(void) {
+    uint8_t a16h = read_short(hspi1,MRF_SADRH);
+    return a16h << 8 | read_short(hspi1,MRF_SADRL);
+}
+
+uint16_t pan_read(void) {
+    uint8_t panh = read_short(hspi1, MRF_PANIDH);
+    return panh << 8 | read_short(hspi1, MRF_PANIDL);
+}
+
+void pan_write(uint16_t panid) {
+    write_short(hspi1, MRF_PANIDH, panid >> 8);
+    write_short(hspi1, MRF_PANIDL, panid & 0xff);
+}
+
+void send16(uint16_t dest16, uint8_t len, char * data) {
+
+    int i = 0;
+    write_long(hspi1,i++, 9);  // header length
+    write_long(hspi1,i++, 9 + ignore_bytes + len);
+
+// 0 | pan compression | ack | no security | no data pending | data frame[3 bits]
+    write_long(hspi1,i++, 0b01100001); // first byte of Frame Control
+// 16 bit source, 802.15.4 (2003), 16 bit dest,
+    write_long(hspi1,i++, 0b10001000); // second byte of frame control
+    write_long(hspi1,i++, 1);  // sequence number 1
+
+    uint16_t panid = pan_read();
+
+    write_long(hspi1,i++, panid & 0xff);  // dest panid
+    write_long(hspi1,i++, panid >> 8);
+    write_long(hspi1,i++, dest16 & 0xff);  // dest16 low
+    write_long(hspi1,i++, dest16 >> 8); // dest16 high
+
+    uint16_t src16 = address16_read();
+    write_long(hspi1,i++, src16 & 0xff); // src16 low
+    write_long(hspi1,i++, src16 >> 8); // src16 high
+
+    /*
+     * This is used to adjust for Maxstream headers inserted between
+     * 802.15.4. headers and data payload.
+     */
+    i += ignore_bytes;
+    for (int q = 0; q < len; q++) {
+        write_long(hspi1,i++, data[q]);
+    }
+    // ack on, and go!
+    write_short(hspi1, MRF_TXNCON, (1<<MRF_TXNACKREQ | 1<<MRF_TXNTRIG));
+}
+
+packet demo_packet(){
+  packet demo;
+  demo.data[0] = 1;
+  demo.data[1] = 2;
+  demo.data[2] = 0;
+  demo.data[3] = 0;
+  return demo;
+}
+
+void transmit_zigbee(packet to_go){
+  write_long(hspi1, 0x80, to_go.m);
+  write_long(hspi1, 0x81, to_go.n + to_go.m);
+  
+  for (size_t i = 0; i < to_go.m + to_go.n; i++){
+    write_long(hspi1, 0x82 + i, to_go.data[i]);
+  }
+  
+  // Data loaded
+  uint8_t max = 100;
+  do{
+    write_short(hspi1,MRF_TXBCON0,0x01);    // Send the data
+    if (max++ == 100){
+      break;
+    }
+    HAL_Delay(1);
+  } while (read_short(hspi1, MRF_INTSTAT) != 0x00);
+  
+}

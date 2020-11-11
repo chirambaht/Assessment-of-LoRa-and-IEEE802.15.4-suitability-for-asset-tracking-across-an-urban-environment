@@ -1,0 +1,17 @@
+main.c:74:5:main	72	static
+main.c:171:6:SystemClock_Config	96	static
+main.c:213:13:MX_SPI1_Init	8	static
+main.c:253:13:MX_USART1_UART_Init	8	static
+main.c:288:13:MX_GPIO_Init	48	static
+main.c:346:6:mrf_reset	8	static
+main.c:353:6:handle_rx	16	static
+main.c:357:6:handle_tx	16	static
+main.c:365:6:mrf_select	8	static
+main.c:370:6:mrf_deselect	8	static
+main.c:374:9:spi_tx	40	static
+main.c:380:6:_delay_ms	16	static
+main.c:384:6:transmit_mrf	8	static
+main.c:394:6:transmit_lora	24	static
+main.c:408:6:receive_mrf	8	static
+main.c:420:6:receive_lora	64	static
+main.c:443:6:Error_Handler	8	static
