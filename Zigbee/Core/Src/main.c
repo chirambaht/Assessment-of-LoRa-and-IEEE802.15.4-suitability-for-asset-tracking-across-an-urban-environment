@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <strings.h>
 #include <stdint.h>
-#include "extras.h"
 #include "lib_mrf24j.h"
 #include "retarget.h"
 /* USER CODE END Includes */
@@ -97,14 +96,16 @@ int main(void)
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
+
   /* USER CODE BEGIN 2 */
-  // Init MRF
+  // Initializing the MRF radio
   RetargetInit(&huart1);
   printf("Starting up...");
   mrf_deselect();
   mrf_init();
 
   mrf_pan_write(PAN_ID);
+
   if (MODE == 0){
 	  printf("set as transmitter...");
 	  mrf_address16_write((uint16_t) DEVICE_ID);
@@ -122,10 +123,10 @@ int main(void)
   while (1){
 
 	if (MODE == 0){
-		mrf_send16(0xFFFF, 1, (char) DEVICE_ID);
+		mrf_send16(0xFFFF, 1, (char) DEVICE_ID); // Sending a packet with only the device ID as data
 		HAL_Delay(1000);
 	} else{
-		mrf_check_flags(&handle_rx, &handle_tx);
+		mrf_check_flags(&handle_rx, &handle_tx); // Calling the radio to check if a packet has come in.
 		_delay_ms(10);
 
 		HAL_Delay(200);
@@ -311,11 +312,12 @@ static void MX_GPIO_Init(void)
 
 void handle_rx(mrf_rx_info_t *rxinfo, uint8_t *rx_buffer) {
     printf("Sender %s. RSSI = %d\n", rx_buffer,rxinfo->rssi);
-
+    //This only runs when a packet is successfully received.
 }
 
 void handle_tx(mrf_tx_info_t *txinfo) {
-    printf("TX");
+	//This only runs when a packet is successfully placed in the transmit registers.
+	//NB: Changes were made to the lib_mrf24j library to send data with no acknowledgments.
 	if (txinfo->tx_ok) {
         printf("Sent message!\n");
     } else {
@@ -324,6 +326,7 @@ void handle_tx(mrf_tx_info_t *txinfo) {
 }
 
 void mrf_reset(){
+	// Hard MRF Reset
 	HAL_GPIO_WritePin(MRF_RESET_GPIO_Port, MRF_RESET_Pin, 0);
 	_delay_ms(10);
 	HAL_GPIO_WritePin(MRF_RESET_GPIO_Port, MRF_RESET_Pin, 1);

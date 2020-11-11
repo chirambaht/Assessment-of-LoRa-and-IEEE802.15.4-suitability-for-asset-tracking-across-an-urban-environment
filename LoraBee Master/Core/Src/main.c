@@ -95,12 +95,10 @@ int main(void) {
      * Tower: This collects 1 packet from the environment and displays is RSSI value
      * 			0: Print		1: Collect MRF		2: Collect LORA		3: Check functionality
      * Joint: This collects all available packets in the network. It collects until enough have been obtained and displays them or till the limit is reached
-     * 			0: Print		1: Collect LORA		2: Collect MRF
+     * 			0: Print		1: Collect LORA
      * Count: Counts the number of packets received and auto updates the counter
      * Live: Receive packet RSSI's as they come in
-     * 			0: Pause		1: Continue			2: LORA				3: MRF
-     * Transmit: Mimics the transmitter modules by sending packets with their ID + D
-     * 			0: A			1: B				2: C				3: D
+     * 			0: Pause		1: LoRa
      *
      * */
     /* USER CODE END 1 */
@@ -454,14 +452,9 @@ int main(void) {
                 if (HAL_GPIO_ReadPin(SW0_GPIO_Port, SW0_Pin) == 0) {
                     _delay_ms(DEBOUNCE);
                     lcd_command(CLEAR);
-                    lcd_putstring("Transmit mode");
-                    _delay_ms(MAX_WAIT);
-                    PROGRAM = 4;
-                    mrf_reset();
-                    mrf_init();
-					mrf_set_ignorebytes(2);
-					mrf_pan_write(0xFFFF);
-					mrf_address16_write(0x0001);
+					lcd_putstring("Going to joint");
+					_delay_ms(1000);
+					PROGRAM = 0;
                     continue;
                 }
                 print_live();
@@ -478,65 +471,6 @@ int main(void) {
 
             print_live();
             _delay_ms(500);
-            break;
-        case 4:
-            if (HAL_GPIO_ReadPin(SW0_GPIO_Port, SW0_Pin) == 0) {
-                _delay_ms(DEBOUNCE);
-                if (HAL_GPIO_ReadPin(SW1_GPIO_Port, SW1_Pin) == 0) {
-                    _delay_ms(DEBOUNCE);
-                    lcd_command(CLEAR);
-                    lcd_putstring("Going to joint");
-                    _delay_ms(1000);
-                    PROGRAM = 0;
-                    mrf_reset();
-					mrf_init();
-					mrf_set_ignorebytes(2);
-					mrf_pan_write(0xFFFF);
-					mrf_promiscuous(1);
-					mrf_address16_write(0xFFFF);
-                    continue;
-                }
-
-                if (DEVICE_ID[0] != "A") {
-                    DEVICE_ID[0] = "A";
-                    lcd_command(CLEAR);
-                    lcd_putstring("Mimicking A");
-                    _delay_ms(1000);
-                }
-            }
-            if (HAL_GPIO_ReadPin(SW1_GPIO_Port, SW1_Pin) == 0) {
-                _delay_ms(DEBOUNCE);
-                if (DEVICE_ID[0] != "B") {
-                    DEVICE_ID[0] = "B";
-                    lcd_command(CLEAR);
-                    lcd_putstring("Mimicking B");
-                    _delay_ms(1000);
-                }
-            }
-            if (HAL_GPIO_ReadPin(SW2_GPIO_Port, SW2_Pin) == 0) {
-                _delay_ms(DEBOUNCE);
-                if (DEVICE_ID[0] != "C") {
-                    DEVICE_ID[0] = "C";
-                    lcd_command(CLEAR);
-                    lcd_putstring("Mimicking C");
-                    _delay_ms(1000);
-                }
-            }
-            if (HAL_GPIO_ReadPin(SW3_GPIO_Port, SW3_Pin) == 0) {
-                _delay_ms(DEBOUNCE);
-                if (DEVICE_ID[0] != "D") {
-                    DEVICE_ID[0] = "D";
-                    lcd_command(CLEAR);
-                    lcd_putstring("Mimicking D");
-                    _delay_ms(1000);
-                }
-            }
-
-            _delay_ms(1000);
-            lcd_command(CLEAR);
-            transmit_mrf();
-            transmit_lora(lora);
-
             break;
         default:
         	PROGRAM = 0;

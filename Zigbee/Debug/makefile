@@ -46,8 +46,8 @@ Zigbee.bin \
 all: Zigbee.elf secondary-outputs
 
 # Tool invocations
-Zigbee.elf: $(OBJS) $(USER_OBJS) /home/ramzy/Documents/LCLPLT/Programs/Zigbee/STM32F031K6TX_FLASH.ld
-	arm-none-eabi-gcc -o "Zigbee.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"/home/ramzy/Documents/LCLPLT/Programs/Zigbee/STM32F031K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Zigbee.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Zigbee.elf: $(OBJS) $(USER_OBJS) /home/ramzy/Documents/Project/Assessment\ of\ LoRa\ and\ IEEE802.15.4\ suitability\ for\ asset\ tracking\ across\ an\ urban\ environment/Zigbee/STM32F031K6TX_FLASH.ld
+	arm-none-eabi-gcc -o "Zigbee.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"/home/ramzy/Documents/Project/Assessment of LoRa and IEEE802.15.4 suitability for asset tracking across an urban environment/Zigbee/STM32F031K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Zigbee.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

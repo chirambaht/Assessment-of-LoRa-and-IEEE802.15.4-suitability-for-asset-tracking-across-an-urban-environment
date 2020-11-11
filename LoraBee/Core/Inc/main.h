@@ -38,10 +38,6 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-typedef struct {
-	uint8_t id;
-	char data[32];
-} packet;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

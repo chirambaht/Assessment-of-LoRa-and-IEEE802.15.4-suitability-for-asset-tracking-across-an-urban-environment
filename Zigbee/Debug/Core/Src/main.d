@@ -27,7 +27,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_spi_ex.h \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart.h \
  ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart_ex.h \
- ../Core/Src/extras.h ../Core/Src/lib_mrf24j.h ../Core/Inc/retarget.h
+ ../Core/Inc/lib_mrf24j.h ../Core/Inc/lib_mrf24j.h ../Core/Inc/retarget.h
 
 ../Core/Inc/main.h:
 
@@ -87,8 +87,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 
 ../Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart_ex.h:
 
-../Core/Src/extras.h:
+../Core/Inc/lib_mrf24j.h:
 
-../Core/Src/lib_mrf24j.h:
+../Core/Inc/lib_mrf24j.h:
 
 ../Core/Inc/retarget.h:

@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "lib_mrf24j.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -68,6 +68,8 @@ void Error_Handler(void);
 #define MRF_RESET_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 void mrf_reset(void);
+void handle_rx(mrf_rx_info_t *rxinfo, uint8_t *rx_buffer);
+void handle_tx(mrf_tx_info_t *txinfo);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -46,8 +46,8 @@ LoraBee.bin \
 all: LoraBee.elf secondary-outputs
 
 # Tool invocations
-LoraBee.elf: $(OBJS) $(USER_OBJS) /home/ramzy/Documents/LCLPLT/Programs/LoraBee/STM32F031K6TX_FLASH.ld
-	arm-none-eabi-gcc -o "LoraBee.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"/home/ramzy/Documents/LCLPLT/Programs/LoraBee/STM32F031K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LoraBee.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+LoraBee.elf: $(OBJS) $(USER_OBJS) /home/ramzy/Documents/Project/Assessment\ of\ LoRa\ and\ IEEE802.15.4\ suitability\ for\ asset\ tracking\ across\ an\ urban\ environment/LoraBee/STM32F031K6TX_FLASH.ld
+	arm-none-eabi-gcc -o "LoraBee.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0 -T"/home/ramzy/Documents/Project/Assessment of LoRa and IEEE802.15.4 suitability for asset tracking across an urban environment/LoraBee/STM32F031K6TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="LoraBee.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
